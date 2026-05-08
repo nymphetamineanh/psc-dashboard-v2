@@ -148,6 +148,30 @@ body {
   font-size: 28px;
 }
 
+.accumulated-box {
+  margin-top: 18px;
+  background: #eff6ff;
+  padding: 18px;
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.accumulated-box span {
+  color: #475569;
+  font-weight: 600;
+}
+
+.accumulated-box strong {
+  font-size: 28px;
+  color: #0f172a;
+}
+
+.revenue-accumulated {
+  background: #fff7ed;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;

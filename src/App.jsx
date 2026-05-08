@@ -35,8 +35,10 @@ function fetchCsv(url) {
 
 export default function App() {
   const [production, setProduction] = useState([]);
+  const [accumulatedProduction, setAccumulatedProduction] = useState({});
   const [wells, setWells] = useState({});
   const [revenue, setRevenue] = useState({});
+  const [accumulatedRevenue, setAccumulatedRevenue] = useState({});
   const [lifting, setLifting] = useState([]);
 
   useEffect(() => {
@@ -47,16 +49,31 @@ export default function App() {
         const revenueData = await fetchCsv(REVENUE_URL);
         const liftingData = await fetchCsv(LIFTING_URL);
 
-        setProduction(productionData);
+        const productionRows = productionData.filter(
+          (row) => row.period && row.plan && row.actual
+        );
+
+        setProduction(productionRows);
+
+        const accumulatedProductionRow = productionData[4];
+
+        setAccumulatedProduction({
+          label:
+            accumulatedProductionRow?.period ||
+            "Accumulated production (ton)",
+          value: parseNumber(accumulatedProductionRow?.plan),
+        });
 
         const wellObject = {};
         wellsData.forEach((row) => {
-          if (row.type === "producing") {
+          const type = String(row.type || "").trim().toLowerCase();
+
+          if (type === "producing" || type === "production") {
             wellObject.producing_wells_count = row.count;
             wellObject.producing_wells = row.wells;
           }
 
-          if (row.type === "drilling") {
+          if (type === "drilling") {
             wellObject.drilling_wells_count = row.count;
             wellObject.drilling_wells = row.wells;
           }
@@ -68,6 +85,15 @@ export default function App() {
           revenueObject[row.type] = parseNumber(row.value);
         });
         setRevenue(revenueObject);
+
+        const accumulatedRevenueRow = revenueData[3];
+
+        setAccumulatedRevenue({
+          label:
+            accumulatedRevenueRow?.type ||
+            "Accumulated revenue (USD)",
+          value: parseNumber(accumulatedRevenueRow?.value),
+        });
 
         setLifting(liftingData);
       } catch (error) {
@@ -120,17 +146,13 @@ export default function App() {
                   <tr key={item.period}>
                     <td>{item.period}</td>
 
-                    <td>
-                      {formatNumber(plan)} 
-                    </td>
+                    <td>{formatNumber(plan)}</td>
 
-                    <td>
-                      {formatNumber(actual)} 
-                    </td>
+                    <td>{formatNumber(actual)}</td>
 
                     <td className={isPositive ? "positive" : "negative"}>
                       {isPositive ? "+" : ""}
-                      {formatNumber(diff)} 
+                      {formatNumber(diff)}
                     </td>
 
                     <td>
@@ -143,6 +165,11 @@ export default function App() {
               })}
             </tbody>
           </table>
+
+          <div className="accumulated-box">
+            <span>{accumulatedProduction.label}</span>
+            <strong>{formatNumber(accumulatedProduction.value)}</strong>
+          </div>
         </section>
 
         <section className="card">
@@ -185,6 +212,11 @@ export default function App() {
           <div className="progress-box">
             <span>% Complete</span>
             <strong>{revenuePercent}%</strong>
+          </div>
+
+          <div className="accumulated-box revenue-accumulated">
+            <span>{accumulatedRevenue.label}</span>
+            <strong>{formatNumber(accumulatedRevenue.value)}</strong>
           </div>
         </section>
 
