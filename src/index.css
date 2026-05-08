@@ -1,0 +1,182 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eef3f8;
+  color: #1f2937;
+}
+
+.dashboard {
+  padding: 24px;
+}
+
+.header {
+  background: #0f172a;
+  color: white;
+  padding: 24px;
+  border-radius: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.header p {
+  margin: 8px 0 0;
+  color: #cbd5e1;
+}
+
+.date-box {
+  background: #1e293b;
+  padding: 12px 18px;
+  border-radius: 12px;
+}
+
+.main-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.card {
+  background: white;
+  padding: 24px;
+  border-radius: 18px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: 22px;
+  color: #0f172a;
+}
+
+.production-table td,
+.production-table th {
+  font-size: 15px;
+}
+
+.positive {
+  color: #15803d;
+  font-weight: bold;
+}
+
+.negative {
+  color: #b91c1c;
+  font-weight: bold;
+}
+
+.status-up {
+  color: #15803d;
+  background: #dcfce7;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: bold;
+}
+
+.status-down {
+  color: #b91c1c;
+  background: #fee2e2;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: bold;
+}
+
+.well-box {
+  background: #f8fafc;
+  padding: 18px;
+  border-radius: 14px;
+  margin-bottom: 16px;
+}
+
+.well-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.well-box span {
+  color: #64748b;
+}
+
+.well-box strong {
+  font-size: 34px;
+  color: #0f172a;
+}
+
+.well-box p {
+  margin-bottom: 0;
+  color: #334155;
+}
+
+.revenue-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.revenue-box {
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 14px;
+}
+
+.revenue-box span {
+  color: #64748b;
+}
+
+.revenue-box strong {
+  display: block;
+  margin-top: 12px;
+  font-size: 28px;
+}
+
+.progress-box {
+  margin-top: 18px;
+  background: #ecfdf5;
+  padding: 18px;
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.progress-box strong {
+  font-size: 28px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+th {
+  background: #e2e8f0;
+  text-align: left;
+  padding: 12px;
+}
+
+td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+@media (max-width: 1000px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .revenue-grid {
+    grid-template-columns: 1fr;
+  }
+}
