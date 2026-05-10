@@ -2,28 +2,55 @@ import { useEffect, useState } from "react";
 import Papa from "papaparse";
 import "./index.css";
 
-const PRODUCTION_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRuVRZJU7FwUBxX-lBNShKJqd0cJojtoY791K7G0hkBUs-ZryPW5B7OacUQ9OGfTx2F9xvR_P4jzKj2/pub?gid=0&single=true&output=csv";
-const WELLS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRuVRZJU7FwUBxX-lBNShKJqd0cJojtoY791K7G0hkBUs-ZryPW5B7OacUQ9OGfTx2F9xvR_P4jzKj2/pub?gid=1065529490&single=true&output=csv";
-const REVENUE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRuVRZJU7FwUBxX-lBNShKJqd0cJojtoY791K7G0hkBUs-ZryPW5B7OacUQ9OGfTx2F9xvR_P4jzKj2/pub?gid=1599167987&single=true&output=csv";
-const LIFTING_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRuVRZJU7FwUBxX-lBNShKJqd0cJojtoY791K7G0hkBUs-ZryPW5B7OacUQ9OGfTx2F9xvR_P4jzKj2/pub?gid=648279194&single=true&output=csv";
+const PRODUCTION_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRuVRZJU7FwUBxX-lBNShKJqd0cJojtoY791K7G0hkBUs-ZryPW5B7OacUQ9OGfTx2F9xvR_P4jzKj2/pub?gid=0&single=true&output=csv";
 
-function formatNumber(value) {
-  const number = Number(value);
+const WELLS_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRuVRZJU7FwUBxX-lBNShKJqd0cJojtoY791K7G0hkBUs-ZryPW5B7OacUQ9OGfTx2F9xvR_P4jzKj2/pub?gid=1065529490&single=true&output=csv";
 
-  if (value === undefined || value === null || value === "") return "-";
-  if (Number.isNaN(number)) return value;
+const REVENUE_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRuVRZJU7FwUBxX-lBNShKJqd0cJojtoY791K7G0hkBUs-ZryPW5B7OacUQ9OGfTx2F9xvR_P4jzKj2/pub?gid=1599167987&single=true&output=csv";
 
-  return number.toLocaleString("en-US");
-}
+const LIFTING_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRuVRZJU7FwUBxX-lBNShKJqd0cJojtoY791K7G0hkBUs-ZryPW5B7OacUQ9OGfTx2F9xvR_P4jzKj2/pub?gid=648279194&single=true&output=csv";
 
 function parseNumber(value) {
-  if (value === undefined || value === null || value === "") return 0;
-  return Number(String(value).replaceAll(",", ""));
+  if (value === undefined || value === null || value === "") {
+    return 0;
+  }
+
+  const cleaned = String(value)
+    .replace(/,/g, "")
+    .replace(/\s/g, "")
+    .trim();
+
+  const number = parseFloat(cleaned);
+
+  return Number.isNaN(number) ? 0 : number;
+}
+
+function formatNumber(value) {
+  if (value === undefined || value === null || value === "") {
+    return "-";
+  }
+
+  const number = Number(value);
+
+  if (Number.isNaN(number)) {
+    return value;
+  }
+
+  return number.toLocaleString("en-US", {
+    maximumFractionDigits: 2,
+  });
 }
 
 function fetchCsv(url) {
+  const cacheBuster = `&_=${Date.now()}`;
+  const urlWithCacheBuster = `${url}${cacheBuster}`;
+
   return new Promise((resolve, reject) => {
-    Papa.parse(url, {
+    Papa.parse(urlWithCacheBuster, {
       download: true,
       header: true,
       skipEmptyLines: true,
@@ -34,8 +61,11 @@ function fetchCsv(url) {
 }
 
 export default function App() {
+  const [currentTime, setCurrentTime] = useState(new Date());
+
   const [production, setProduction] = useState([]);
   const [accumulatedProduction, setAccumulatedProduction] = useState({});
+
   const [wells, setWells] = useState({});
   const [revenue, setRevenue] = useState({});
   const [accumulatedRevenue, setAccumulatedRevenue] = useState({});
@@ -51,6 +81,7 @@ export default function App() {
 
         const productionRows = productionData.filter((row) => {
           const period = String(row.period || "").trim().toLowerCase();
+
           return period === "day" || period === "month" || period === "year";
         });
 
@@ -58,15 +89,19 @@ export default function App() {
 
         const accumulatedProductionRow = productionData.find((row) => {
           const period = String(row.period || "").trim().toLowerCase();
+
           return period.includes("accumulated");
         });
 
         setAccumulatedProduction({
-          label: accumulatedProductionRow?.period || "Accumulated production (ton)",
+          label:
+            accumulatedProductionRow?.period ||
+            "Accumulated production (ton)",
           value: parseNumber(accumulatedProductionRow?.plan),
         });
 
         const wellObject = {};
+
         wellsData.forEach((row) => {
           const type = String(row.type || "").trim().toLowerCase();
 
@@ -80,12 +115,15 @@ export default function App() {
             wellObject.drilling_wells = row.wells;
           }
         });
+
         setWells(wellObject);
 
         const revenueObject = {};
+
         revenueData.forEach((row) => {
           revenueObject[row.type] = parseNumber(row.value);
         });
+
         setRevenue(revenueObject);
 
         const accumulatedRevenueRow = revenueData[3];
@@ -102,25 +140,55 @@ export default function App() {
     }
 
     loadData();
+
+    const dataInterval = setInterval(loadData, 60000);
+
+    const clockInterval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => {
+      clearInterval(dataInterval);
+      clearInterval(clockInterval);
+    };
   }, []);
 
   const revenuePercent = revenue.plan_usd
     ? ((revenue.actual_usd / revenue.plan_usd) * 100).toFixed(1)
     : "-";
 
+  const displayDate = currentTime.toLocaleDateString("en-GB");
+
+  const displayTime = currentTime.toLocaleTimeString("en-GB", {
+    hour12: false,
+  });
+
   return (
     <div className="dashboard">
       <header className="header">
         <div>
-          <h1>BLOCK 09-2/09 – OPERATION DASHBOARD</h1>
-          <p>Data taken from Google Sheet</p>
+          <h1>PSC BLOCK 09-2/09 – OPERATION DASHBOARD</h1>
+
+          <div className="marquee-box">
+            <span>Block 09-2/09, PCMD, Vietsovpetro</span>
+          </div>
         </div>
 
-        <div className="date-box">online update</div>
+        <div className="header-right">
+          <div className="date-box live-status">
+            <span className="pulse-dot"></span>
+            online update
+          </div>
+
+          <div className="clock-box">
+            <div>{displayDate}</div>
+            <div>{displayTime}</div>
+          </div>
+        </div>
       </header>
 
       <main className="main-grid">
-        <section className="card">
+        <section className="card production-card">
           <h2>Oil Production (ton)</h2>
 
           <table className="production-table">
@@ -147,10 +215,12 @@ export default function App() {
                     <td>{item.period}</td>
                     <td>{formatNumber(plan)}</td>
                     <td>{formatNumber(actual)}</td>
+
                     <td className={isPositive ? "positive" : "negative"}>
                       {isPositive ? "+" : ""}
                       {formatNumber(diff)}
                     </td>
+
                     <td>
                       <span className={isPositive ? "status-up" : "status-down"}>
                         {isPositive ? "▲" : "▼"} {percent.toFixed(1)}%
@@ -176,6 +246,7 @@ export default function App() {
               <span>Wells in production</span>
               <strong>{wells.producing_wells_count ?? "-"}</strong>
             </div>
+
             <p>{wells.producing_wells}</p>
           </div>
 
@@ -184,12 +255,13 @@ export default function App() {
               <span>Wells in drilling</span>
               <strong>{wells.drilling_wells_count ?? "-"}</strong>
             </div>
+
             <p>{wells.drilling_wells}</p>
           </div>
         </section>
 
-        <section className="card">
-          <h2>Oil Sales Revenue</h2>
+        <section className="card revenue-card">
+          <h2>Oil Sales Revenue (USD)</h2>
 
           <div className="revenue-grid">
             <div className="revenue-box">
