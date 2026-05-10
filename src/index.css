@@ -39,10 +39,15 @@ body {
 }
 
 .title-icon {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+
+  height: auto;
+
+  max-height: 34px;
 
   object-fit: contain;
+
+  display: block;
 
   flex-shrink: 0;
 }
