@@ -5,10 +5,10 @@ body {
 
   background:
     linear-gradient(
-      rgba(15, 23, 42, 0.85),
-      rgba(15, 23, 42, 0.85)
+      rgba(15, 23, 42, 0.28),
+      rgba(15, 23, 42, 0.28)
     ),
-    url("/background.jpg");
+    url("/psc-dashboard/background.jpg");
 
   background-size: cover;
   background-position: center;
@@ -23,11 +23,55 @@ body {
   padding: 24px;
 }
 
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-title svg {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.08);
+  padding: 7px;
+  border-radius: 12px;
+  box-sizing: content-box;
+  flex-shrink: 0;
+}
+
+.title-icon {
+  width: 28px;
+  height: 28px;
+
+  object-fit: contain;
+
+  flex-shrink: 0;
+}
+
+.drilling-icon {
+  filter:
+    brightness(0)
+    saturate(100%)
+    invert(11%)
+    sepia(17%)
+    saturate(1447%)
+    hue-rotate(184deg)
+    brightness(94%)
+    contrast(94%);
+}
+
 .header {
-  background: #071633;
+  background: rgba(7, 22, 51, 0.58);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
   color: white;
+
   padding: 28px 32px;
+
   border-radius: 20px;
+
+  border: 1px solid rgba(255,255,255,0.12);
 
   display: flex;
   justify-content: space-between;
@@ -168,31 +212,47 @@ body {
 .clock-box {
   color: white;
 
-  background: #1e293b;
+  background: rgba(30, 41, 59, 0.88);
 
-  padding: 14px 20px;
+  padding: 14px 22px;
 
   border-radius: 16px;
 
-  text-align: center;
+  min-width: 170px;
 
-  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  line-height: 1.15;
+
+  box-sizing: border-box;
 }
-
 .clock-box div:first-child {
-  color: #cbd5e1;
+  color: #dbeafe;
 
-  font-size: 17px;
+  font-size: 18px;
 
-  margin-bottom: 4px;
+  font-weight: 600;
+
+  letter-spacing: 0.5px;
+
+  margin-bottom: 6px;
+
+  line-height: 1;
 }
 
 .clock-box div:last-child {
-  font-size: 34px;
+  font-size: 30px;
 
-  font-weight: bold;
+  font-weight: 700;
 
   letter-spacing: 1px;
+
+  line-height: 1;
+
+  font-variant-numeric: tabular-nums;
 }
 
 /* =========================================
@@ -214,13 +274,34 @@ body {
 ========================================= */
 
 .card {
-  background: white;
+  background: rgba(255, 255, 255, 0.86);
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 
   padding: 24px;
 
   border-radius: 20px;
 
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(255,255,255,0.25);
+
+  box-shadow:
+    0 10px 40px rgba(0,0,0,0.18),
+    0 4px 12px rgba(0,0,0,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.25);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+
+  box-shadow:
+    0 18px 48px rgba(0,0,0,0.24),
+    0 8px 20px rgba(0,0,0,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.28);
 }
 
 .card h2 {
@@ -311,7 +392,7 @@ td {
 ========================================= */
 
 .well-box {
-  background: #f8fafc;
+  background: rgba(248, 250, 252, 0.86);
 
   padding: 20px;
 
@@ -329,15 +410,23 @@ td {
 }
 
 .well-box span {
-  color: #64748b;
+  color: #475569;
 
   font-size: 18px;
+
+  font-weight: 700;
 }
 
 .well-box strong {
-  font-size: 42px;
+  font-size: 36px;
+
+  font-weight: 800;
 
   color: #0f172a;
+
+  font-variant-numeric: tabular-nums;
+
+  letter-spacing: 1px;
 }
 
 .well-box p {
@@ -367,7 +456,7 @@ td {
 }
 
 .revenue-box {
-  background: #f8fafc;
+  background: rgba(255,255,255,0.86);
 
   padding: 22px;
 
@@ -385,7 +474,9 @@ td {
 
   margin-top: 12px;
 
-  font-size: 40px;
+  font-size: 30px;
+
+  font-weight: 700;
 }
 
 .complete-box {
@@ -403,7 +494,7 @@ td {
 .accumulated-box {
   margin-top: 20px;
 
-  background: #eff6ff;
+  background: rgba(239, 246, 255, 0.86); 
 
   padding: 20px;
 
@@ -423,7 +514,9 @@ td {
 }
 
 .accumulated-box strong {
-  font-size: 42px;
+  font-size: 32px;
+
+  font-weight: 700;
 
   color: #0f172a;
 }
@@ -494,10 +587,6 @@ td {
     left: 130%;
   }
 }
-
-  .revenue-grid {
-    grid-template-columns: 1fr;
-  }
   
 
 
@@ -554,21 +643,28 @@ td {
   .date-box {
     min-width: 0;
     padding: 12px;
-    font-size: 16px;
+    font-size: 22px;
   }
 
-  .clock-box {
-    min-width: 0;
-    padding: 10px 12px;
-  }
+.clock-box div:first-child {
+  font-size: 17px;
 
-  .clock-box div:first-child {
-    font-size: 14px;
-  }
+  font-weight: 600;
 
-  .clock-box div:last-child {
-    font-size: 24px;
-  }
+  margin-bottom: 4px;
+
+  letter-spacing: 0.4px;
+}
+
+.clock-box div:last-child {
+  font-size: 24px;
+
+  font-weight: 700;
+
+  line-height: 1;
+
+  font-variant-numeric: tabular-nums;
+}
 
   .main-grid {
     grid-template-columns: 1fr;
@@ -581,8 +677,45 @@ td {
   .card h2 {
     font-size: 26px;
   }
-
+  
+  .well-box strong {
+  font-size: 30px;
+  }
+  
   .revenue-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
+
+  .revenue-box {
+    padding: 16px;
+  }
+
+  .revenue-box span {
+    font-size: 16px;
+  }
+
+  .revenue-box strong {
+    font-size: 26px;
+  }
+
+  .accumulated-box {
+    padding: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .accumulated-box span {
+    font-size: 16px;
+  }
+
+  .accumulated-box strong {
+    font-size: 26px;
+  }
+
+  .revenue-accumulated {
+    margin-top: 14px;
+  }
+
 }

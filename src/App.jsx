@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
 import "./index.css";
+import {
+  Droplets,
+  DollarSign,
+  Drill,
+  Ship
+} from "lucide-react";
 
 const PRODUCTION_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vRuVRZJU7FwUBxX-lBNShKJqd0cJojtoY791K7G0hkBUs-ZryPW5B7OacUQ9OGfTx2F9xvR_P4jzKj2/pub?gid=0&single=true&output=csv";
@@ -189,8 +195,10 @@ export default function App() {
 
       <main className="main-grid">
         <section className="card production-card">
-          <h2>Oil Production (ton)</h2>
-
+		  <h2 className="section-title">
+			<Droplets size={26} strokeWidth={2.4} />
+		    Oil Production (ton)
+		  </h2>	
           <table className="production-table">
             <thead>
               <tr>
@@ -239,7 +247,18 @@ export default function App() {
         </section>
 
         <section className="card">
-          <h2>Wells Status</h2>
+		 		  
+		  <h2 className="section-title">
+
+			<img
+			 src="/psc-dashboard/icons/drilling.png"
+			 alt="Drilling"
+			 className="title-icon drilling-icon"
+			/>
+
+			Wells Status
+
+		  </h2>
 
           <div className="well-box">
             <div className="well-header">
@@ -261,7 +280,10 @@ export default function App() {
         </section>
 
         <section className="card revenue-card">
-          <h2>Oil Sales Revenue (USD)</h2>
+		  <h2 className="section-title">
+			<DollarSign size={26} strokeWidth={2.4} />
+			Oil Sales Revenue (USD)
+		  </h2>
 
           <div className="revenue-grid">
             <div className="revenue-box">
@@ -287,8 +309,10 @@ export default function App() {
         </section>
 
         <section className="card">
-          <h2>Oil Lifting</h2>
-
+		  <h2 className="section-title">
+		   <Ship size={26} strokeWidth={2.4} />
+		   Oil Lifting
+		  </h2>
           <table>
             <thead>
               <tr>
