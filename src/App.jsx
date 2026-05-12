@@ -1,12 +1,24 @@
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
 import "./index.css";
+
 import {
   Droplets,
   DollarSign,
-  Drill,
   Ship
 } from "lucide-react";
+
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend,
+} from "recharts";
 
 const PRODUCTION_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vRuVRZJU7FwUBxX-lBNShKJqd0cJojtoY791K7G0hkBUs-ZryPW5B7OacUQ9OGfTx2F9xvR_P4jzKj2/pub?gid=0&single=true&output=csv";
@@ -20,12 +32,16 @@ const REVENUE_URL =
 const LIFTING_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vRuVRZJU7FwUBxX-lBNShKJqd0cJojtoY791K7G0hkBUs-ZryPW5B7OacUQ9OGfTx2F9xvR_P4jzKj2/pub?gid=648279194&single=true&output=csv";
 
+const PRODUCTION_CHART_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vRuVRZJU7FwUBxX-lBNShKJqd0cJojtoY791K7G0hkBUs-ZryPW5B7OacUQ9OGfTx2F9xvR_P4jzKj2/pub?gid=643603643&single=true&output=csv";
+
 function parseNumber(value) {
   if (value === undefined || value === null || value === "") {
     return 0;
   }
 
   const cleaned = String(value)
+    .replace(/"/g, "")
     .replace(/,/g, "")
     .replace(/\s/g, "")
     .trim();
@@ -72,6 +88,11 @@ export default function App() {
   const [production, setProduction] = useState([]);
   const [accumulatedProduction, setAccumulatedProduction] = useState({});
 
+  const [productionChart, setProductionChart] = useState([]);
+  const [fromMonth, setFromMonth] = useState("");
+  const [toMonth, setToMonth] = useState("");
+  const [showProductionChart, setShowProductionChart] = useState(false);
+
   const [wells, setWells] = useState({});
   const [revenue, setRevenue] = useState({});
   const [accumulatedRevenue, setAccumulatedRevenue] = useState({});
@@ -84,10 +105,10 @@ export default function App() {
         const wellsData = await fetchCsv(WELLS_URL);
         const revenueData = await fetchCsv(REVENUE_URL);
         const liftingData = await fetchCsv(LIFTING_URL);
+        const productionChartData = await fetchCsv(PRODUCTION_CHART_URL);
 
         const productionRows = productionData.filter((row) => {
           const period = String(row.period || "").trim().toLowerCase();
-
           return period === "day" || period === "month" || period === "year";
         });
 
@@ -95,7 +116,6 @@ export default function App() {
 
         const accumulatedProductionRow = productionData.find((row) => {
           const period = String(row.period || "").trim().toLowerCase();
-
           return period.includes("accumulated");
         });
 
@@ -105,6 +125,21 @@ export default function App() {
             "Accumulated production (ton)",
           value: parseNumber(accumulatedProductionRow?.plan),
         });
+
+        const chartRows = productionChartData
+          .filter((row) => row.month)
+          .map((row) => ({
+            month: row.month,
+            plan: parseNumber(row.plan),
+            actual: parseNumber(row.actual),
+          }));
+
+        setProductionChart(chartRows);
+
+        if (chartRows.length > 0) {
+          setFromMonth((current) => current || chartRows[0].month);
+          setToMonth((current) => current || chartRows[chartRows.length - 1].month);
+        }  
 
         const wellObject = {};
 
@@ -147,14 +182,11 @@ export default function App() {
 
     loadData();
 
-    const dataInterval = setInterval(loadData, 60000);
-
     const clockInterval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
 
     return () => {
-      clearInterval(dataInterval);
       clearInterval(clockInterval);
     };
   }, []);
@@ -169,6 +201,24 @@ export default function App() {
     hour12: false,
   });
 
+  const fromIndex = productionChart.findIndex((item) => item.month === fromMonth);
+  const toIndex = productionChart.findIndex((item) => item.month === toMonth);
+
+  const startIndex =
+    fromIndex >= 0
+      ? fromIndex
+      : 0;
+
+  const endIndex =
+    toIndex >= 0
+      ? toIndex
+      : productionChart.length - 1;
+
+  const filteredChartData =
+    startIndex <= endIndex
+      ? productionChart.slice(startIndex, endIndex + 1)
+      : productionChart.slice(endIndex, startIndex + 1);
+      
   return (
     <div className="dashboard">
       <header className="header">
@@ -195,10 +245,14 @@ export default function App() {
 
       <main className="main-grid">
         <section className="card production-card">
-		  <h2 className="section-title">
-			<Droplets size={26} strokeWidth={2.4} />
-		    Oil Production (ton)
-		  </h2>	
+          <h2
+            className="section-title production-title"
+            onClick={() => setShowProductionChart(!showProductionChart)}
+          >
+            <Droplets size={26} strokeWidth={2.4} />
+            Oil Production (ton)
+          </h2>
+
           <table className="production-table">
             <thead>
               <tr>
@@ -244,21 +298,80 @@ export default function App() {
             <span>{accumulatedProduction.label}</span>
             <strong>{formatNumber(accumulatedProduction.value)}</strong>
           </div>
+
+          {showProductionChart && (
+            <div className="production-chart-wrapper">
+              <div className="chart-toolbar">
+                <span>Monthly Production Plan vs Actual</span>
+
+                <div className="chart-range">
+                  <label>
+                    From
+                    <select
+                      value={fromMonth}
+                      onChange={(e) => setFromMonth(e.target.value)}
+                    >
+                      {productionChart.map((item) => (
+                        <option key={`from-${item.month}`} value={item.month}>
+                          {item.month}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    To
+                    <select
+                      value={toMonth}
+                      onChange={(e) => setToMonth(e.target.value)}
+                    >
+                      {productionChart.map((item) => (
+                        <option key={`to-${item.month}`} value={item.month}>
+                          {item.month}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+              </div>
+
+              <ResponsiveContainer width="100%" height={330}>
+                <ComposedChart data={filteredChartData}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => formatNumber(value)} />
+                  <Legend />
+
+                  <Bar
+                    dataKey="actual"
+                    name="Actual"
+                    radius={[8, 8, 0, 0]}
+                  />
+
+                  <Line
+                    type="monotone"
+                    dataKey="plan"
+                    name="Plan"
+                    strokeWidth={3}
+                    dot={{ r: 4 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </section>
 
         <section className="card">
-		 		  
-		  <h2 className="section-title">
-
-			<img
-			 src="/psc-dashboard/icons/drilling.png"
-			 alt="Drilling"
-			 className="title-icon drilling-icon"
-			/>
-
-			Wells Status
-
-		  </h2>
+          <h2 className="section-title">
+            <img
+              src="/psc-dashboard/icons/drilling.png"
+              alt="Drilling"
+              className="title-icon drilling-icon"
+            />
+            Wells Status
+          </h2>
 
           <div className="well-box">
             <div className="well-header">
@@ -280,10 +393,10 @@ export default function App() {
         </section>
 
         <section className="card revenue-card">
-		  <h2 className="section-title">
-			<DollarSign size={26} strokeWidth={2.4} />
-			Oil Sales Revenue (USD)
-		  </h2>
+          <h2 className="section-title">
+            <DollarSign size={26} strokeWidth={2.4} />
+            Oil Sales Revenue (USD)
+          </h2>
 
           <div className="revenue-grid">
             <div className="revenue-box">
@@ -309,10 +422,11 @@ export default function App() {
         </section>
 
         <section className="card">
-		  <h2 className="section-title">
-		   <Ship size={26} strokeWidth={2.4} />
-		   Oil Lifting
-		  </h2>
+          <h2 className="section-title">
+            <Ship size={26} strokeWidth={2.4} />
+            Oil Lifting
+          </h2>
+
           <table>
             <thead>
               <tr>
