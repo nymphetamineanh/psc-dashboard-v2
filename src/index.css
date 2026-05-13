@@ -19,6 +19,24 @@ body {
   color: #1f2937;
 }
 
+.chart-range input[type="month"] {
+  border: none;
+
+  background: #eff6ff;
+
+  padding: 10px 14px;
+
+  border-radius: 12px;
+
+  font-size: 16px;
+
+  font-weight: 700;
+
+  color: #0f172a;
+
+  outline: none;
+}
+
 .dashboard {
   padding: 16px;
 }
@@ -113,6 +131,65 @@ body {
   color: #334155;
   font-size: 15px;
   font-weight: 700;
+}
+
+.chart-page {
+  min-height: 100vh;
+}
+
+.chart-page-header {
+  background: rgba(7, 22, 51, 0.72);
+  color: white;
+  padding: 26px 32px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.12);
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chart-page-header h1 {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.chart-page-header p {
+  margin: 8px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #dbeafe;
+}
+
+.back-button {
+  border: none;
+  background: #1e293b;
+  color: white;
+  padding: 14px 22px;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.back-button:hover {
+  background: #334155;
+}
+
+.chart-full-card {
+  margin-top: 24px;
+  min-height: calc(100vh - 180px);
+}
+
+.chart-full-card .chart-toolbar span {
+  font-size: 30px;
+}
+
+.chart-full-card .chart-range input[type="month"] {
+  font-size: 18px;
+  padding: 12px 16px;
 }
 
 /* =========================================

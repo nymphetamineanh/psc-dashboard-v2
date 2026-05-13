@@ -6,7 +6,7 @@ import {
   Droplets,
   DollarSign,
   Ship,
-  Cog
+  Cog,
 } from "lucide-react";
 
 import {
@@ -44,6 +44,7 @@ function parseNumber(value) {
   const cleaned = String(value)
     .replace(/"/g, "")
     .replace(/,/g, "")
+    .replace(/%/g, "")
     .replace(/\s/g, "")
     .trim();
 
@@ -92,7 +93,7 @@ export default function App() {
   const [productionChart, setProductionChart] = useState([]);
   const [fromMonth, setFromMonth] = useState("");
   const [toMonth, setToMonth] = useState("");
-  const [showProductionChart, setShowProductionChart] = useState(false);
+  const [activeView, setActiveView] = useState("dashboard");
 
   const [wells, setWells] = useState({});
   const [revenue, setRevenue] = useState({});
@@ -110,6 +111,7 @@ export default function App() {
 
         const productionRows = productionData.filter((row) => {
           const period = String(row.period || "").trim().toLowerCase();
+
           return period === "day" || period === "month" || period === "year";
         });
 
@@ -117,6 +119,7 @@ export default function App() {
 
         const accumulatedProductionRow = productionData.find((row) => {
           const period = String(row.period || "").trim().toLowerCase();
+
           return period.includes("accumulated");
         });
 
@@ -128,21 +131,30 @@ export default function App() {
         });
 
         const chartRows = productionChartData
-		  .map((row) => ({
-			month_key: String(row.month_key || "").trim(),
-			month: String(row.month || "").trim(),
-			plan: parseNumber(row.plan),
-			actual: parseNumber(row.actual),
-		  }))
-		  .filter((row) => row.month_key && row.month);
-		
-		
-        setProductionChart(chartRows);
+          .map((row) => {
+            const normalized = {};
+
+            Object.keys(row).forEach((key) => {
+              normalized[key.trim().toLowerCase()] = row[key];
+            });
+
+            return {
+              month_key: String(normalized.month_key || "").trim(),
+              month: String(normalized.month || "").trim(),
+              plan: parseNumber(normalized.plan),
+              actual: parseNumber(normalized.actual),
+            };
+          })
+          .filter((row) => row.month_key && row.month && row.plan > 0);
 
         if (chartRows.length > 0) {
-          setFromMonth((current) => current || chartRows[0].month);
-          setToMonth((current) => current || chartRows[chartRows.length - 1].month);
-        }  
+          setProductionChart(chartRows);
+
+          setFromMonth((current) => current || chartRows[0].month_key);
+          setToMonth(
+            (current) => current || chartRows[chartRows.length - 1].month_key
+          );
+        }
 
         const wellObject = {};
 
@@ -204,15 +216,84 @@ export default function App() {
     hour12: false,
   });
 
+  const filteredChartData = productionChart.filter((item) => {
+    return item.month_key >= fromMonth && item.month_key <= toMonth;
+  });
 
-  
-  const filteredChartData =
-   productionChart.filter(
-    (item) =>
-      item.month_key >= fromMonth &&
-      item.month_key <= toMonth
-   );
-      
+  if (activeView === "productionChart") {
+    return (
+      <div className="dashboard chart-page">
+        <header className="chart-page-header">
+          <div>
+            <h1>Oil Production Chart</h1>
+            <p>Monthly Plan vs Actual</p>
+          </div>
+
+          <button
+            className="back-button"
+            onClick={() => setActiveView("dashboard")}
+          >
+            Back to Dashboard
+          </button>
+        </header>
+
+        <section className="card chart-full-card">
+          <div className="chart-toolbar">
+            <span>Production Plan vs Actual</span>
+
+            <div className="chart-range">
+              <label>
+                From
+                <input
+                  type="month"
+                  value={fromMonth}
+                  onChange={(e) => setFromMonth(e.target.value)}
+                />
+              </label>
+
+              <label>
+                To
+                <input
+                  type="month"
+                  value={toMonth}
+                  onChange={(e) => setToMonth(e.target.value)}
+                />
+              </label>
+            </div>
+          </div>
+
+          <ResponsiveContainer width="100%" height={620}>
+            <ComposedChart data={filteredChartData}>
+              <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
+
+              <XAxis dataKey="month" />
+
+              <YAxis />
+
+              <Tooltip formatter={(value) => formatNumber(value)} />
+
+              <Legend />
+
+              <Bar
+                dataKey="actual"
+                name="Actual"
+                radius={[8, 8, 0, 0]}
+              />
+
+              <Line
+                type="monotone"
+                dataKey="plan"
+                name="Plan"
+                strokeWidth={4}
+                dot={{ r: 5 }}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard">
       <header className="header">
@@ -241,7 +322,7 @@ export default function App() {
         <section className="card production-card">
           <h2
             className="section-title production-title"
-            onClick={() => setShowProductionChart(!showProductionChart)}
+            onClick={() => setActiveView("productionChart")}
           >
             <Droplets size={26} strokeWidth={2.4} />
             Oil Production (ton)
@@ -292,71 +373,12 @@ export default function App() {
             <span>{accumulatedProduction.label}</span>
             <strong>{formatNumber(accumulatedProduction.value)}</strong>
           </div>
-
-          {showProductionChart && (
-            <div className="production-chart-wrapper">
-              <div className="chart-toolbar">
-                <span>Monthly Production Plan vs Actual</span>
-				
-				<div className="chart-range">
-
-				  <label>
-					From
-
-					<input
-					  type="month"
-					  value={fromMonth}
-					  onChange={(e) => setFromMonth(e.target.value)}
-					/>
-
-				  </label>
-
-				  <label>
-					To
-
-					<input
-					  type="month"
-					  value={toMonth}
-					  onChange={(e) => setToMonth(e.target.value)}
-					/>
-
-				  </label>
-
-				</div>
-
-              </div>
-
-              <ResponsiveContainer width="100%" height={330}>
-                <ComposedChart data={filteredChartData}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => formatNumber(value)} />
-                  <Legend />
-
-                  <Bar
-                    dataKey="actual"
-                    name="Actual"
-                    radius={[8, 8, 0, 0]}
-                  />
-
-                  <Line
-                    type="monotone"
-                    dataKey="plan"
-                    name="Plan"
-                    strokeWidth={3}
-                    dot={{ r: 4 }}
-                  />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-          )}
         </section>
 
         <section className="card">
           <h2 className="section-title">
             <Cog size={26} strokeWidth={2.4} />
-			Wells Status			
+            Wells Status
           </h2>
 
           <div className="well-box">
@@ -407,7 +429,7 @@ export default function App() {
           </div>
         </section>
 
-        <section className="card">
+        <section className="card lifting-card">
           <h2 className="section-title">
             <Ship size={26} strokeWidth={2.4} />
             Oil Lifting
