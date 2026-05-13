@@ -5,7 +5,8 @@ import "./index.css";
 import {
   Droplets,
   DollarSign,
-  Ship
+  Ship,
+  Cog
 } from "lucide-react";
 
 import {
@@ -127,13 +128,15 @@ export default function App() {
         });
 
         const chartRows = productionChartData
-          .filter((row) => row.month)
-          .map((row) => ({
-            month: row.month,
-            plan: parseNumber(row.plan),
-            actual: parseNumber(row.actual),
-          }));
-
+		  .map((row) => ({
+			month_key: String(row.month_key || "").trim(),
+			month: String(row.month || "").trim(),
+			plan: parseNumber(row.plan),
+			actual: parseNumber(row.actual),
+		  }))
+		  .filter((row) => row.month_key && row.month);
+		
+		
         setProductionChart(chartRows);
 
         if (chartRows.length > 0) {
@@ -201,23 +204,14 @@ export default function App() {
     hour12: false,
   });
 
-  const fromIndex = productionChart.findIndex((item) => item.month === fromMonth);
-  const toIndex = productionChart.findIndex((item) => item.month === toMonth);
 
-  const startIndex =
-    fromIndex >= 0
-      ? fromIndex
-      : 0;
-
-  const endIndex =
-    toIndex >= 0
-      ? toIndex
-      : productionChart.length - 1;
-
+  
   const filteredChartData =
-    startIndex <= endIndex
-      ? productionChart.slice(startIndex, endIndex + 1)
-      : productionChart.slice(endIndex, startIndex + 1);
+   productionChart.filter(
+    (item) =>
+      item.month_key >= fromMonth &&
+      item.month_key <= toMonth
+   );
       
   return (
     <div className="dashboard">
@@ -303,36 +297,32 @@ export default function App() {
             <div className="production-chart-wrapper">
               <div className="chart-toolbar">
                 <span>Monthly Production Plan vs Actual</span>
+				
+				<div className="chart-range">
 
-                <div className="chart-range">
-                  <label>
-                    From
-                    <select
-                      value={fromMonth}
-                      onChange={(e) => setFromMonth(e.target.value)}
-                    >
-                      {productionChart.map((item) => (
-                        <option key={`from-${item.month}`} value={item.month}>
-                          {item.month}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+				  <label>
+					From
 
-                  <label>
-                    To
-                    <select
-                      value={toMonth}
-                      onChange={(e) => setToMonth(e.target.value)}
-                    >
-                      {productionChart.map((item) => (
-                        <option key={`to-${item.month}`} value={item.month}>
-                          {item.month}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
+					<input
+					  type="month"
+					  value={fromMonth}
+					  onChange={(e) => setFromMonth(e.target.value)}
+					/>
+
+				  </label>
+
+				  <label>
+					To
+
+					<input
+					  type="month"
+					  value={toMonth}
+					  onChange={(e) => setToMonth(e.target.value)}
+					/>
+
+				  </label>
+
+				</div>
 
               </div>
 
@@ -365,12 +355,8 @@ export default function App() {
 
         <section className="card">
           <h2 className="section-title">
-            <img
-              src="/psc-dashboard/icons/drilling.png"
-              alt="Drilling"
-              className="title-icon drilling-icon"
-            />
-            Wells Status
+            <Cog size={26} strokeWidth={2.4} />
+			Wells Status			
           </h2>
 
           <div className="well-box">

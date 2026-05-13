@@ -20,7 +20,7 @@ body {
 }
 
 .dashboard {
-  padding: 24px;
+  padding: 16px;
 }
 
 .section-title {
@@ -38,17 +38,13 @@ body {
   flex-shrink: 0;
 }
 
+/* Icon ảnh dùng cho title, có trong index.css */
 .title-icon {
   width: 34px;
-
   height: auto;
-
   max-height: 34px;
-
   object-fit: contain;
-
   display: block;
-
   flex-shrink: 0;
 }
 
@@ -64,6 +60,7 @@ body {
     contrast(94%);
 }
 
+/* Production chart, có trong index.css */
 .production-title {
   cursor: pointer;
 }
@@ -79,7 +76,9 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 14px;
   margin-bottom: 18px;
+  flex-wrap: wrap;
 }
 
 .chart-toolbar span {
@@ -88,32 +87,7 @@ body {
   color: #0f172a;
 }
 
-.chart-toolbar select {
-  border: none;
-  background: #eff6ff;
-  padding: 10px 14px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #0f172a;
-  outline: none;
-}
-
-.chart-range {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.chart-range label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #334155;
-  font-size: 15px;
-  font-weight: 700;
-}
-
+.chart-toolbar select,
 .chart-range select {
   border: none;
   background: #eff6ff;
@@ -125,6 +99,26 @@ body {
   outline: none;
 }
 
+.chart-range {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.chart-range label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #334155;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* =========================================
+   HEADER
+========================================= */
+
 .header {
   background: rgba(7, 22, 51, 0.58);
 
@@ -133,7 +127,7 @@ body {
 
   color: white;
 
-  padding: 28px 32px;
+  padding: 20px 28px;
 
   border-radius: 20px;
 
@@ -146,9 +140,14 @@ body {
 
 .header h1 {
   margin: 0;
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+
+  font-size: 38px;
+
+  font-weight: 800;
+
+  letter-spacing: 1px;
+
+  line-height: 1.1;
 }
 
 /* =========================================
@@ -158,7 +157,7 @@ body {
 .marquee-box {
   margin-top: 12px;
 
-  width: 780px;
+  width: min(100%, 1000px);
   height: 30px;
 
   overflow: hidden;
@@ -180,7 +179,6 @@ body {
 }
 
 @keyframes marquee-left {
-
   0% {
     transform: translateX(780px);
   }
@@ -254,7 +252,6 @@ body {
 }
 
 @keyframes pulse-ring {
-
   0% {
     transform: scale(0.45);
     opacity: 0.9;
@@ -295,6 +292,7 @@ body {
 
   box-sizing: border-box;
 }
+
 .clock-box div:first-child {
   color: #dbeafe;
 
@@ -326,13 +324,13 @@ body {
 ========================================= */
 
 .main-grid {
-  margin-top: 24px;
+  margin-top: 16px;
 
   display: grid;
 
   grid-template-columns: 1fr 1fr;
 
-  gap: 24px;
+  gap: 16px;
 }
 
 /* =========================================
@@ -345,7 +343,7 @@ body {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 
-  padding: 24px;
+  padding: 18px;
 
   border-radius: 20px;
 
@@ -370,14 +368,28 @@ body {
     inset 0 1px 0 rgba(255,255,255,0.28);
 }
 
+/* format cho 4 header, có viền màu và viền bao quanh */
 .card h2 {
   margin-top: 0;
 
-  margin-bottom: 18px;
+  margin-bottom: 22px;
 
-  font-size: 28px;
+  font-size: 32px;
+
+  font-weight: 800;
 
   color: #0f172a;
+
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.08),
+    rgba(15, 23, 42, 0.02)
+  );
+
+  padding: 10px 16px;
+
+  border-radius: 16px;
+  border-left: 4px solid #1d4ed8;
 }
 
 /* =========================================
@@ -393,40 +405,79 @@ table {
 }
 
 th {
-  background: #dbe3ee;
+  background: #cfd8e6;
 
   text-align: left;
 
-  padding: 14px;
+  padding: 12px 14px;
 
-  font-size: 17px;
+  font-size: 18px;
+
+  font-weight: 800;
+
+  text-transform: uppercase;
+
+  letter-spacing: 1px;
+
+  color: #334155;
 }
 
 td {
-  padding: 14px;
+  padding: 12px 14px;
 
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #dbe4f0;
 
-  font-size: 17px;
+  font-size: 28px;
+
+  font-weight: 600;
+
+  color: #0f172a;
 }
 
 /* =========================================
    PRODUCTION
 ========================================= */
 
-.production-table td,
 .production-table th {
-  font-size: 17px;
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #334155;
 }
 
-.positive {
-  color: #15803d;
-  font-weight: bold;
+.production-table td {
+  font-size: 24px;
+  font-weight: 600;
+  color: #0f172a;
 }
 
-.negative {
-  color: #b91c1c;
-  font-weight: bold;
+.production-table td:first-child {
+  font-weight: 700;
+
+  color: #334155;
+
+  width: 120px;
+}
+
+.production-table td:nth-child(3) {
+  font-weight: 800;
+
+  color: #020617;
+}
+
+.positive,
+.production-table td.positive {
+  color: #16a34a !important;
+
+  font-weight: 800;
+}
+
+.negative,
+.production-table td.negative {
+  color: #dc2626 !important;
+
+  font-weight: 800;
 }
 
 .status-up {
@@ -460,11 +511,11 @@ td {
 .well-box {
   background: rgba(248, 250, 252, 0.86);
 
-  padding: 20px;
+  padding: 16px;
 
   border-radius: 16px;
 
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
 .well-header {
@@ -478,9 +529,13 @@ td {
 .well-box span {
   color: #475569;
 
-  font-size: 18px;
+  font-size: 22px;
 
   font-weight: 700;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.5px;
 }
 
 .well-box strong {
@@ -498,15 +553,19 @@ td {
 .well-box p {
   margin-bottom: 0;
 
-  color: #334155;
+  color: #0f172a;
 
   white-space: pre-line;
 
-  line-height: 1.7;
+  line-height: 1.9;
 
   word-break: break-word;
 
-  font-size: 16px;
+  font-size: 26px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.3px;
 }
 
 /* =========================================
@@ -524,7 +583,7 @@ td {
 .revenue-box {
   background: rgba(255,255,255,0.86);
 
-  padding: 22px;
+  padding: 16px;
 
   border-radius: 16px;
 }
@@ -532,7 +591,11 @@ td {
 .revenue-box span {
   color: #64748b;
 
-  font-size: 18px;
+  font-size: 24px;
+
+  font-weight: 700;
+
+  text-transform: uppercase;
 }
 
 .revenue-box strong {
@@ -558,11 +621,11 @@ td {
 ========================================= */
 
 .accumulated-box {
-  margin-top: 20px;
+  margin-top: 14px;
 
   background: rgba(239, 246, 255, 0.86); 
 
-  padding: 20px;
+  padding: 14px 18px;
 
   border-radius: 16px;
 
@@ -572,11 +635,13 @@ td {
 }
 
 .accumulated-box span {
-  color: #475569;
+  color: #1e293b;
 
-  font-weight: 600;
+  font-weight: 800;
 
-  font-size: 20px;
+  font-size: 30px;
+
+  line-height: 1.2;
 }
 
 .accumulated-box strong {
@@ -640,7 +705,6 @@ td {
 }
 
 @keyframes card-shimmer {
-
   0% {
     left: -120%;
   }
@@ -653,8 +717,6 @@ td {
     left: 130%;
   }
 }
-  
-
 
 /* =========================================
    MOBILE
@@ -712,25 +774,25 @@ td {
     font-size: 22px;
   }
 
-.clock-box div:first-child {
-  font-size: 17px;
+  .clock-box div:first-child {
+    font-size: 17px;
 
-  font-weight: 600;
+    font-weight: 600;
 
-  margin-bottom: 4px;
+    margin-bottom: 4px;
 
-  letter-spacing: 0.4px;
-}
+    letter-spacing: 0.4px;
+  }
 
-.clock-box div:last-child {
-  font-size: 24px;
+  .clock-box div:last-child {
+    font-size: 24px;
 
-  font-weight: 700;
+    font-weight: 700;
 
-  line-height: 1;
+    line-height: 1;
 
-  font-variant-numeric: tabular-nums;
-}
+    font-variant-numeric: tabular-nums;
+  }
 
   .main-grid {
     grid-template-columns: 1fr;
@@ -741,13 +803,15 @@ td {
   }
 
   .card h2 {
-    font-size: 26px;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
   }
-  
+
   .well-box strong {
-  font-size: 30px;
+    font-size: 30px;
   }
-  
+
   .revenue-grid {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -773,15 +837,76 @@ td {
   }
 
   .accumulated-box span {
-    font-size: 16px;
+    font-size: 20px;
   }
 
   .accumulated-box strong {
-    font-size: 26px;
+    font-size: 32px;
   }
 
   .revenue-accumulated {
     margin-top: 14px;
   }
 
+  .chart-toolbar {
+    align-items: flex-start;
+  }
+
+  .chart-toolbar span {
+    font-size: 18px;
+  }
+
+  .chart-range {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .chart-range label {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .chart-toolbar select,
+  .chart-range select {
+    font-size: 14px;
+    padding: 9px 10px;
+  }
+
+  .production-table th {
+    font-size: 13px;
+    font-weight: 800;
+    padding: 10px 6px;
+    white-space: nowrap;
+  }
+
+  .production-table td {
+    font-size: 16px;
+    font-weight: 600;
+    padding: 10px 6px;
+    white-space: nowrap;
+  }
+
+  .production-table td:nth-child(3) {
+    font-weight: 800;
+  }
+
+  .status-up,
+  .status-down {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 72px;
+
+    padding: 5px 8px;
+
+    border-radius: 999px;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    box-sizing: border-box;
+  }
 }
