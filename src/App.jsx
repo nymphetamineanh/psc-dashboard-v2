@@ -2,23 +2,20 @@ import { useEffect, useState } from "react";
 import Papa from "papaparse";
 import "./index.css";
 
-import {
-  Droplets,
-  DollarSign,
-  Ship,
-  Cog
-} from "lucide-react";
+import { Droplets, DollarSign, Ship, Cog } from "lucide-react";
 
 import {
   ResponsiveContainer,
   ComposedChart,
   Bar,
+  Cell,
   Line,
   XAxis,
   YAxis,
   Tooltip,
   CartesianGrid,
   Legend,
+  LabelList,
 } from "recharts";
 
 const PRODUCTION_URL =
@@ -44,6 +41,7 @@ function parseNumber(value) {
   const cleaned = String(value)
     .replace(/"/g, "")
     .replace(/,/g, "")
+    .replace(/%/g, "")
     .replace(/\s/g, "")
     .trim();
 
@@ -85,6 +83,7 @@ function fetchCsv(url) {
 
 export default function App() {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [animatedYtdAchievement, setAnimatedYtdAchievement] = useState(0);
 
   const [production, setProduction] = useState([]);
   const [accumulatedProduction, setAccumulatedProduction] = useState({});
@@ -92,7 +91,7 @@ export default function App() {
   const [productionChart, setProductionChart] = useState([]);
   const [fromMonth, setFromMonth] = useState("");
   const [toMonth, setToMonth] = useState("");
-  const [showProductionChart, setShowProductionChart] = useState(false);
+  const [activeView, setActiveView] = useState("dashboard");
 
   const [wells, setWells] = useState({});
   const [revenue, setRevenue] = useState({});
@@ -109,45 +108,69 @@ export default function App() {
         const productionChartData = await fetchCsv(PRODUCTION_CHART_URL);
 
         const productionRows = productionData.filter((row) => {
-          const period = String(row.period || "").trim().toLowerCase();
+          const period = String(row.period || "")
+            .trim()
+            .toLowerCase();
+
           return period === "day" || period === "month" || period === "year";
         });
 
         setProduction(productionRows);
 
         const accumulatedProductionRow = productionData.find((row) => {
-          const period = String(row.period || "").trim().toLowerCase();
+          const period = String(row.period || "")
+            .trim()
+            .toLowerCase();
+
           return period.includes("accumulated");
         });
 
         setAccumulatedProduction({
           label:
-            accumulatedProductionRow?.period ||
-            "Accumulated production (ton)",
+            accumulatedProductionRow?.period || "Accumulated production (ton)",
           value: parseNumber(accumulatedProductionRow?.plan),
         });
 
         const chartRows = productionChartData
-		  .map((row) => ({
-			month_key: String(row.month_key || "").trim(),
-			month: String(row.month || "").trim(),
-			plan: parseNumber(row.plan),
-			actual: parseNumber(row.actual),
-		  }))
-		  .filter((row) => row.month_key && row.month);
-		
-		
-        setProductionChart(chartRows);
+          .map((row) => {
+            const normalized = {};
+
+            Object.keys(row).forEach((key) => {
+              normalized[key.trim().toLowerCase()] = row[key];
+            });
+
+            const rawMonthKey = String(normalized.month_key || "").trim();
+
+            const monthKeyParts = rawMonthKey.split("-");
+
+            const normalizedMonthKey =
+              monthKeyParts.length === 2
+                ? `${monthKeyParts[0]}-${monthKeyParts[1].padStart(2, "0")}`
+                : rawMonthKey;
+
+            return {
+              month_key: normalizedMonthKey,
+              month: String(normalized.month || "").trim(),
+              plan: parseNumber(normalized.plan),
+              actual: parseNumber(normalized.actual),
+            };
+          })
+          .filter((row) => row.month_key && row.month && row.plan > 0);
 
         if (chartRows.length > 0) {
-          setFromMonth((current) => current || chartRows[0].month);
-          setToMonth((current) => current || chartRows[chartRows.length - 1].month);
-        }  
+          setProductionChart(chartRows);
 
+          const currentYear = new Date().getFullYear();
+
+          setFromMonth((current) => current || `${currentYear}-01`);
+          setToMonth((current) => current || `${currentYear}-12`);
+        }
         const wellObject = {};
 
         wellsData.forEach((row) => {
-          const type = String(row.type || "").trim().toLowerCase();
+          const type = String(row.type || "")
+            .trim()
+            .toLowerCase();
 
           if (type === "producing" || type === "production") {
             wellObject.producing_wells_count = row.count;
@@ -185,14 +208,40 @@ export default function App() {
 
     loadData();
 
+    const dataInterval = setInterval(loadData, 30 * 60 * 1000);
     const clockInterval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
 
     return () => {
       clearInterval(clockInterval);
+      clearInterval(dataInterval);
     };
   }, []);
+
+  useEffect(() => {
+    let timeoutId;
+
+    if (activeView === "dashboard") {
+      timeoutId = setTimeout(
+        () => {
+          setActiveView("productionChart");
+        },
+        10 * 60 * 1000,
+      );
+    }
+
+    if (activeView === "productionChart") {
+      timeoutId = setTimeout(
+        () => {
+          setActiveView("dashboard");
+        },
+        2 * 60 * 1000,
+      );
+    }
+
+    return () => clearTimeout(timeoutId);
+  }, [activeView]);
 
   const revenuePercent = revenue.plan_usd
     ? ((revenue.actual_usd / revenue.plan_usd) * 100).toFixed(1)
@@ -204,15 +253,411 @@ export default function App() {
     hour12: false,
   });
 
+  const filteredChartData = productionChart.filter((item) => {
+    return item.month_key >= fromMonth && item.month_key <= toMonth;
+  });
 
-  
-  const filteredChartData =
-   productionChart.filter(
-    (item) =>
-      item.month_key >= fromMonth &&
-      item.month_key <= toMonth
-   );
-      
+  const chartDataWithAchievement = filteredChartData.map((item) => {
+    const achievement = item.plan > 0 ? (item.actual / item.plan) * 100 : 0;
+
+    return {
+      ...item,
+
+      achievementLabel: `${achievement.toFixed(0)}%`,
+
+      achievementColor: achievement >= 100 ? "#16a34a" : "#dc2626",
+    };
+  });
+
+  const currentYear = new Date().getFullYear();
+
+  const currentMonth = new Date().getMonth() + 1;
+
+  const currentMonthKey = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
+
+  const liveMonthKey =
+    [...chartDataWithAchievement]
+      .filter((item) => item.actual > 0)
+      .sort((a, b) => a.month_key.localeCompare(b.month_key))
+      .at(-1)?.month_key || currentMonthKey;
+
+  const currentYearRows = productionChart.filter((item) =>
+    String(item.month_key).startsWith(`${currentYear}-`),
+  );
+
+  const ytdRows = currentYearRows.filter((item) => {
+    const monthNumber = Number(item.month_key.split("-")[1]);
+    return monthNumber <= currentMonth;
+  });
+
+  const annualPlan = currentYearRows.reduce((sum, item) => sum + item.plan, 0);
+
+  const ytdActual = ytdRows.reduce((sum, item) => sum + item.actual, 0);
+
+  const ytdAchievement = annualPlan ? (ytdActual / annualPlan) * 100 : 0;
+
+  useEffect(() => {
+    if (activeView !== "productionChart") {
+      return;
+    }
+
+    let animationFrameId;
+
+    const start = 0;
+    const end = ytdAchievement;
+    const duration = 700;
+    const startTime = performance.now();
+
+    function animate(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+
+      const value = start + (end - start) * easedProgress;
+
+      setAnimatedYtdAchievement(value);
+
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    }
+
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [activeView, ytdAchievement]);
+
+  if (activeView === "productionChart") {
+    return (
+      <div className="dashboard chart-page">
+        <header className="chart-page-header">
+          <div className="chart-header-title">
+            <h1>Oil Production Chart</h1>
+            <p>Monthly Plan vs Actual</p>
+          </div>
+
+          <button
+            className="back-button"
+            onClick={() => setActiveView("dashboard")}
+          >
+            Back to Dashboard
+          </button>
+        </header>
+
+        <section className="card chart-full-card">
+          <div className="ytd-summary">
+            <div className="ytd-left">
+              <div className="ytd-stat-card">
+                <div className="ytd-stat-row">
+                  <div className="ytd-stat-label">ANNUAL PLAN</div>
+
+                  <div className="ytd-stat-inline">
+                    <div className="ytd-stat-value">
+                      {formatNumber(annualPlan)}
+                    </div>
+
+                    <div className="ytd-stat-unit">ton</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ytd-stat-card">
+                <div className="ytd-stat-row">
+                  <div className="ytd-stat-label">YTD ACTUAL</div>
+
+                  <div className="ytd-stat-inline">
+                    <div className="ytd-stat-value ytd-actual-value">
+                      {formatNumber(ytdActual)}
+                    </div>
+
+                    <div className="ytd-stat-unit">ton</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="ytd-right">
+              <div className="ytd-gauge-wrapper">
+                <svg className="ytd-gauge" viewBox="0 0 240 140">
+                  <path
+                    d="
+    M 30 120
+    A 90 90 0 0 1 210 120
+  "
+                    fill="none"
+                    stroke="#cbd5e1"
+                    strokeWidth="18"
+                    strokeLinecap="round"
+                  />
+
+                  <path
+                    d="
+            M 30 120
+            A 90 90 0 0 1 210 120
+          "
+                    fill="none"
+                    stroke="#0f766e"
+                    strokeWidth="18"
+                    strokeLinecap="round"
+                    strokeDasharray={283}
+                    strokeDashoffset={
+                      283 - Math.min(animatedYtdAchievement, 100) * 2.83
+                    }
+                  />
+
+                  <text
+                    x="120"
+                    y="88"
+                    textAnchor="middle"
+                    className="gauge-value"
+                  >
+                    {animatedYtdAchievement.toFixed(1)}%
+                  </text>
+
+                  <text
+                    x="120"
+                    y="112"
+                    textAnchor="middle"
+                    className="gauge-label"
+                  >
+                    ACHIEVEMENT
+                  </text>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="chart-toolbar">
+            <span>Production Plan vs Actual</span>
+
+            <div className="chart-range">
+              <label>
+                From
+                <input
+                  type="month"
+                  value={fromMonth}
+                  onChange={(e) => setFromMonth(e.target.value)}
+                />
+              </label>
+
+              <label>
+                To
+                <input
+                  type="month"
+                  value={toMonth}
+                  onChange={(e) => setToMonth(e.target.value)}
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="y-axis-unit">ton</div>
+
+          <div className="production-chart-box">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={chartDataWithAchievement}
+                barCategoryGap="20%"
+                barGap={4}
+                margin={{
+                  top: 115,
+                  right: 30,
+                  left: 10,
+                  bottom: 30,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" opacity={0.18} />
+
+                <XAxis
+                  dataKey="month"
+                  tick={{
+                    fontSize: 15,
+                    fontWeight: 700,
+                    fill: "#334155",
+                  }}
+                />
+
+                <YAxis
+                  width={92}
+                  tick={{
+                    fontSize: 16,
+                    fontWeight: 800,
+                    fill: "#334155",
+                  }}
+                />
+
+                <Tooltip formatter={(value) => formatNumber(value)} />
+
+                <Legend
+                  verticalAlign="top"
+                  align="center"
+                  height={36}
+                  wrapperStyle={{
+                    paddingBottom: 8,
+                    fontSize: 16,
+                    fontWeight: 700,
+                  }}
+                />
+
+                {/* ACTUAL BAR */}
+
+                <Bar
+                  dataKey="actual"
+                  name="Actual"
+                  fill="#0f766e"
+                  radius={[8, 8, 0, 0]}
+                  isAnimationActive={false}
+                >
+                  {chartDataWithAchievement.map((entry, index) => {
+                    const isCurrentMonth =
+                      String(entry.month_key).trim() === liveMonthKey;
+
+                    return (
+                      <Cell
+                        key={`actual-cell-${index}`}
+                        fill={isCurrentMonth ? "#06b6d4" : "#0f766e"}
+                      />
+                    );
+                  })}
+
+                  {/* BOX PLAN / ACTUAL */}
+
+                  <LabelList
+                    dataKey="actual"
+                    content={(props) => {
+                      const { x, y, width, index } = props;
+
+                      const item = chartDataWithAchievement[index];
+
+                      if (!item) {
+                        return null;
+                      }
+
+                      const isCurrentMonth =
+                        String(item.month_key).trim() === liveMonthKey;
+
+                      if (!isCurrentMonth) {
+                        return null;
+                      }
+
+                      return (
+                        <g pointerEvents="none">
+                          <rect
+                            x={x + width / 2 - 82}
+                            y={y - 130}
+                            width={164}
+                            height={58}
+                            rx={12}
+                            fill="rgba(15,23,42,0.92)"
+                          />
+
+                          <text
+                            x={x + width / 2}
+                            y={y - 106}
+                            textAnchor="middle"
+                            fill="#f59e0b"
+                            fontSize={15}
+                            fontWeight={900}
+                          >
+                            Plan: {formatNumber(item.plan)}
+                          </text>
+
+                          <text
+                            x={x + width / 2}
+                            y={y - 83}
+                            textAnchor="middle"
+                            fill="#06b6d4"
+                            fontSize={15}
+                            fontWeight={900}
+                          >
+                            Actual: {formatNumber(item.actual)}
+                          </text>
+                        </g>
+                      );
+                    }}
+                  />
+
+                  {/* % ACHIEVEMENT + LIVE */}
+
+                  <LabelList
+                    dataKey="achievementLabel"
+                    position="top"
+                    formatter={(value) => value}
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 800,
+                    }}
+                    content={(props) => {
+                      const { x, y, width, value, index } = props;
+
+                      const item = chartDataWithAchievement[index];
+
+                      if (!item) {
+                        return null;
+                      }
+
+                      const isCurrentMonth =
+                        String(item.month_key).trim() === liveMonthKey;
+
+                      return (
+                        <>
+                          <text
+                            x={x + width / 2}
+                            y={y - 10}
+                            fill={item.achievementColor}
+                            textAnchor="middle"
+                            fontSize={18}
+                            fontWeight={900}
+                          >
+                            {value}
+                          </text>
+
+                          {isCurrentMonth && (
+                            <text
+                              x={x + width / 2}
+                              y={y - 34}
+                              fill="#06b6d4"
+                              textAnchor="middle"
+                              fontSize={16}
+                              fontWeight={900}
+                            >
+                              LIVE
+                            </text>
+                          )}
+                        </>
+                      );
+                    }}
+                  />
+                </Bar>
+
+                {/* PLAN LINE */}
+
+                <Line
+                  type="monotone"
+                  dataKey="plan"
+                  name="Plan"
+                  stroke="#f59e0b"
+                  strokeWidth={4}
+                  dot={{
+                    r: 5,
+                    strokeWidth: 2,
+                    fill: "#f59e0b",
+                  }}
+                  activeDot={{
+                    r: 7,
+                  }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard">
       <header className="header">
@@ -241,7 +686,7 @@ export default function App() {
         <section className="card production-card">
           <h2
             className="section-title production-title"
-            onClick={() => setShowProductionChart(!showProductionChart)}
+            onClick={() => setActiveView("productionChart")}
           >
             <Droplets size={26} strokeWidth={2.4} />
             Oil Production (ton)
@@ -278,7 +723,9 @@ export default function App() {
                     </td>
 
                     <td>
-                      <span className={isPositive ? "status-up" : "status-down"}>
+                      <span
+                        className={isPositive ? "status-up" : "status-down"}
+                      >
                         {isPositive ? "▲" : "▼"} {percent.toFixed(1)}%
                       </span>
                     </td>
@@ -292,71 +739,12 @@ export default function App() {
             <span>{accumulatedProduction.label}</span>
             <strong>{formatNumber(accumulatedProduction.value)}</strong>
           </div>
-
-          {showProductionChart && (
-            <div className="production-chart-wrapper">
-              <div className="chart-toolbar">
-                <span>Monthly Production Plan vs Actual</span>
-				
-				<div className="chart-range">
-
-				  <label>
-					From
-
-					<input
-					  type="month"
-					  value={fromMonth}
-					  onChange={(e) => setFromMonth(e.target.value)}
-					/>
-
-				  </label>
-
-				  <label>
-					To
-
-					<input
-					  type="month"
-					  value={toMonth}
-					  onChange={(e) => setToMonth(e.target.value)}
-					/>
-
-				  </label>
-
-				</div>
-
-              </div>
-
-              <ResponsiveContainer width="100%" height={330}>
-                <ComposedChart data={filteredChartData}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => formatNumber(value)} />
-                  <Legend />
-
-                  <Bar
-                    dataKey="actual"
-                    name="Actual"
-                    radius={[8, 8, 0, 0]}
-                  />
-
-                  <Line
-                    type="monotone"
-                    dataKey="plan"
-                    name="Plan"
-                    strokeWidth={3}
-                    dot={{ r: 4 }}
-                  />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-          )}
         </section>
 
         <section className="card">
           <h2 className="section-title">
             <Cog size={26} strokeWidth={2.4} />
-			Wells Status			
+            Wells Status
           </h2>
 
           <div className="well-box">
@@ -407,7 +795,7 @@ export default function App() {
           </div>
         </section>
 
-        <section className="card">
+        <section className="card lifting-card">
           <h2 className="section-title">
             <Ship size={26} strokeWidth={2.4} />
             Oil Lifting
