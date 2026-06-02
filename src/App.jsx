@@ -2,7 +2,16 @@ import { useEffect, useState } from "react";
 import Papa from "papaparse";
 import "./index.css";
 
+<<<<<<< HEAD
 import { Droplets, DollarSign, Ship, Cog } from "lucide-react";
+=======
+import {
+  Droplets,
+  DollarSign,
+  Ship,
+  Cog,
+} from "lucide-react";
+>>>>>>> 76ee7f257b663c2d20f8979613c3d71902dcb4fd
 
 import {
   ResponsiveContainer,
